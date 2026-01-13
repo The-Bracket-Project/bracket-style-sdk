@@ -18,6 +18,10 @@ dev = [
   "pytest>=7.0.0",
   "pytest-cov>=4.0.0",
 ]
+demo = [
+  "fastapi>=0.110.0",
+  "uvicorn>=0.28.0",
+]
 dashboard = [
   "fastapi>=0.110.0",
   "uvicorn>=0.28.0",
