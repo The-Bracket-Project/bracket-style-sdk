@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bracket-style-sdk"
+version = "0.1.0"
+description = "Python SDK for Bracket Style AWS-backed APIs"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Bracket" }]
+dependencies = [
+  "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0.0",
+  "pytest-cov>=4.0.0",
+]
+dashboard = [
+  "fastapi>=0.110.0",
+  "uvicorn>=0.28.0",
+  "jinja2>=3.1.0",
+  "pydantic>=2.0.0",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
