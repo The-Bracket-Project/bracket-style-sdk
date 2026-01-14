@@ -1,3 +1,10 @@
 .DS_Store
 .env
 dashboard/client_aliases.json
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Python packaging
+*.egg-info/

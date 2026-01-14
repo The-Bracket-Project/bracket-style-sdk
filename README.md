@@ -33,6 +33,13 @@ python -m pip install -e .[dashboard]
 uvicorn dashboard.app:app --reload --port 8001
 ```
 
+Container:
+
+```bash
+docker build -f Dockerfile.dashboard -t bracket-dashboard .
+docker run --env-file .env -p 8001:8001 bracket-dashboard
+```
+
 ## Demo API (v1)
 
 Run the demo API locally to validate the SDK health check and usage tracking pipeline.
