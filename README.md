@@ -53,12 +53,25 @@ uvicorn demo_api.app:app --reload --port 8000
 
 Then point the SDK at `http://localhost:8000` and call `/health`.
 
-## Smoke Test Script
+## Smoke Test Scripts
+
+If your API Gateway requires a stage, pass `--stage` (or set `BRACKET_STAGE`).
+If your base URL already includes the stage, omit it.
 
 ```bash
 python scripts/smoke_test.py \\
-  --base-url "https://{api_id}.execute-api.{region}.amazonaws.com/{stage}" \\
+  --base-url "https://{api_id}.execute-api.{region}.amazonaws.com" \\
+  --stage "prod" \\
   --api-key "YOUR_KEY" \\
   --client-id "acme-inc" \\
   --path "/v1/health"
+```
+
+```bash
+python scripts/smoke_generate.py \\
+  --base-url "https://{api_id}.execute-api.{region}.amazonaws.com" \\
+  --stage "prod" \\
+  --api-key "YOUR_KEY" \\
+  --client-id "acme-inc" \\
+  --body '{"inputs":"Say hello in one sentence.","parameters":{"max_new_tokens":64,"temperature":0.2}}'
 ```
