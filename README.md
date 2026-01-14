@@ -45,3 +45,13 @@ uvicorn demo_api.app:app --reload --port 8000
 ```
 
 Then point the SDK at `http://localhost:8000` and call `/health`.
+
+## Smoke Test Script
+
+```bash
+python scripts/smoke_test.py \\
+  --base-url "https://{api_id}.execute-api.{region}.amazonaws.com/{stage}" \\
+  --api-key "YOUR_KEY" \\
+  --client-id "acme-inc" \\
+  --path "/v1/health"
+```

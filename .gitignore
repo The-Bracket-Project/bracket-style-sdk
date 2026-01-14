@@ -1,1 +1,3 @@
 .DS_Store
+.env
+dashboard/client_aliases.json
