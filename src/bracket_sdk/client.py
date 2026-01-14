@@ -52,6 +52,9 @@ class BracketClient:
     def delete(self, path: str, **kwargs: Any) -> Any:
         return self.request("DELETE", path, **kwargs)
 
+    def health(self) -> Any:
+        return self.get("/health")
+
     def _parse_response(self, response: httpx.Response) -> Any:
         content_type = response.headers.get("content-type", "")
         if "application/json" in content_type:
