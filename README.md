@@ -16,13 +16,13 @@ client = BracketClient(
     base_url="https://api.bracketstyle.com",
     client_id="acme-inc",
 )
-response = client.get("/health")
+response = client.get("/v1/health")
 print(response)
 ```
 
 `client_id` is optional and is sent as `x-client-id` to help with internal usage tracking.
 
-You can also call `client.health()` as a convenience method.
+You can also call `client.health()` as a convenience method (defaults to `/v1/health`).
 
 ## Internal Dashboard
 
@@ -51,7 +51,7 @@ export DASHBOARD_URL="http://localhost:8001"
 uvicorn demo_api.app:app --reload --port 8000
 ```
 
-Then point the SDK at `http://localhost:8000` and call `/health`.
+Then point the SDK at `http://localhost:8000` and call `/v1/health`.
 
 ## Smoke Test Scripts
 

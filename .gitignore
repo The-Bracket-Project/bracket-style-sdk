@@ -1,6 +1,8 @@
 .DS_Store
 .env
 dashboard/client_aliases.json
+td.json
+td-register.json
 __pycache__/
 *.py[cod]
 *.pyo

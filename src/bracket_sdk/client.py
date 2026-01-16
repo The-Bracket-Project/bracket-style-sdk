@@ -53,7 +53,7 @@ class BracketClient:
         return self.request("DELETE", path, **kwargs)
 
     def health(self) -> Any:
-        return self.get("/health")
+        return self.get("/v1/health")
 
     def _parse_response(self, response: httpx.Response) -> Any:
         content_type = response.headers.get("content-type", "")
