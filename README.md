@@ -21,7 +21,6 @@ from bracket_sdk import BracketClient
 
 client = BracketClient(
     api_key="YOUR_API_KEY",
-    base_url="https://api.bracketstyle.com",
     client_id="acme-inc",
 )
 response = client.get("/v1/health")
@@ -29,6 +28,15 @@ print(response)
 ```
 
 `client_id` is optional and is sent as `x-client-id` to help with internal usage tracking.
+The SDK uses the default Bracket API base URL automatically.
+
+Environment-based setup (optional):
+```bash
+export BRACKET_API_KEY="YOUR_API_KEY"
+```
+```python
+client = BracketClient()
+```
 
 You can also call `client.health()` as a convenience method (defaults to `/v1/health`).
 
@@ -43,17 +51,15 @@ Implemented in this repo:
 - [x] Convenience HTTP verbs, raw request access, and `health()` helper
 - [x] Context manager support and explicit `close()`
 - [x] Basic unit tests for auth headers and rate limit behavior
+- [x] Environment-based defaults for API key/base URL
 - [x] Smoke test scripts for health and generate endpoints
 - [x] README quickstart usage example
-
-Not implemented yet:
 - [ ] Typed request/response models (`src/bracket_sdk/models/` is empty)
 - [ ] API-specific methods beyond generic HTTP + `health()`
 - [ ] Async client variant
 - [ ] Pagination helpers/iterators
 - [ ] Retry handling for 429 with `Retry-After` and configurable backoff/jitter
 - [ ] Structured logging or debug hooks for requests/responses
-- [ ] Environment-based config defaults for API key/base URL
 - [ ] Broader unit test coverage (retry paths, error payload parsing, timeouts)
 - [ ] CI running tests/linting (PR checks are placeholder)
 - [ ] Release/publish automation and changelog
