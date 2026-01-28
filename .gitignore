@@ -1,5 +1,8 @@
 .DS_Store
 .env
+.env.*
+!.env.example
+!**/.env.example
 dashboard/client_aliases.json
 td.json
 td-register.json
@@ -33,3 +36,8 @@ pip-wheel-metadata/
 .coverage.*
 coverage.xml
 htmlcov/
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+terraform.tfvars
+terraform.tfvars.json
