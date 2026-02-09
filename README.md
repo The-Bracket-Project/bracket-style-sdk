@@ -7,6 +7,8 @@ Python SDK for Bracket Style APIs. Internal dashboard and demo API are for Brack
 - `dashboard/` internal dashboard (Internal Use)
 - `demo_api/` demo API (Internal Use)
 - `scripts/` smoke tests (Internal Use)
+- `client_portal/` vite front end for external users to track and access API keys
+- `client_portal_server/` express backend services to support functions for the client portal front end
 
 ## SDK Quickstart
 
