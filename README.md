@@ -32,17 +32,17 @@ health = client.health()
 | Group | Directories | Purpose |
 |---|---|---|
 | SDK core | `src/`, `tests/` | Contains the Python package (`bracket_sdk`) and unit tests for core client behavior. This is the primary product artifact. |
-| Customer portal | `client_portal/`, `client_portal_server/` | React/Vite frontend plus Node/Express backend-for-frontend for API key management, auth integration, and portal APIs. |
-| Internal operations | `dashboard/`, `demo_api/` | FastAPI dashboard for usage monitoring and a demo API used for local/internal validation flows. |
+| Customer portal | `services/client_portal/`, `services/client_portal_server/` | React/Vite frontend plus Node/Express backend-for-frontend for API key management, auth integration, and portal APIs. |
+| Internal operations | `services/dashboard/`, `services/demo_api/` | FastAPI dashboard for usage monitoring and a demo API used for local/internal validation flows. |
 | Infrastructure and delivery | `infra/`, `.github/workflows/`, `scripts/` | Terraform for AWS infrastructure, GitHub Actions for CI/CD, and scripts for deployment and smoke checks. |
 | Documentation and distribution assets | `docs/`, `README.public.md` | Docs index and deployment documentation, plus public-facing README material used for SDK sync/public distribution. |
-| Integration scaffold | `sagemaker_endpoint/` | Minimal SageMaker inference scaffold for integration experimentation and reference. |
+| Integration scaffold | `services/sagemaker_endpoint/` | Minimal SageMaker inference scaffold for integration experimentation and reference. |
 
 Tooling snapshot:
 - Python SDK/tooling: Python 3.9+, `setuptools` packaging, `pytest` for SDK tests.
 - JavaScript/TypeScript apps: Node.js (Node 20 in CI), `npm` per app (`package-lock.json` in each portal project).
 - Frontend build system: React + TypeScript + Vite.
-- Backend service testing: Node built-in test runner (`node --test`) in `client_portal_server/`.
+- Backend service testing: Node built-in test runner (`node --test`) in `services/client_portal_server/`.
 - Infrastructure as code: Terraform (`infra/`, provider-managed AWS resources).
 - Containerization: Dockerfiles for portal API, frontend image packaging, and dashboard runtime.
 - Lint/format posture: no repository-wide lint/format standard is currently codified in central config files.
@@ -51,10 +51,10 @@ Tooling snapshot:
 | Component | Role | Runtime/Platform |
 |---|---|---|
 | Python SDK (`src/bracket_sdk`) | Consumer library for Bracket Style API access | Python package (setuptools, Python 3.9+) |
-| Client Portal (`client_portal`) | Customer UI for authentication and API key lifecycle management | React + TypeScript + Vite, deployed as static assets |
-| Client Portal API (`client_portal_server`) | Backend-for-frontend for key operations and auth-protected workflows | Node.js + Express, containerized and deployed to ECS |
-| Internal Dashboard (`dashboard`) | Internal usage and operational visibility | FastAPI, containerized and deployed to ECS |
-| Demo API (`demo_api`) | Local/internal API harness for smoke and usage flows | FastAPI service |
+| Client Portal (`services/client_portal`) | Customer UI for authentication and API key lifecycle management | React + TypeScript + Vite, deployed as static assets |
+| Client Portal API (`services/client_portal_server`) | Backend-for-frontend for key operations and auth-protected workflows | Node.js + Express, containerized and deployed to ECS |
+| Internal Dashboard (`services/dashboard`) | Internal usage and operational visibility | FastAPI, containerized and deployed to ECS |
+| Demo API (`services/demo_api`) | Local/internal API harness for smoke and usage flows | FastAPI service |
 | SDK Public Sync (`sdk-public-sync` workflow) | Mirrors selected SDK files to public repository | GitHub Actions source sync (non-runtime deploy) |
 
 ## 5. CI/CD at a High Level
@@ -79,9 +79,9 @@ Current trigger model is branch-based (`main`/PR), with no tag- or release-drive
 
 ## 6. Deployment and Environments
 Deployment is split by surface:
-- `client_portal/`: built as static assets and served via S3 + CloudFront.
-- `client_portal_server/`: packaged as a Docker image, pushed to ECR, then deployed to ECS (behind ALB).
-- `dashboard/`: packaged as a Docker image, pushed to ECR, then deployed to ECS.
+- `services/client_portal/`: built as static assets and served via S3 + CloudFront.
+- `services/client_portal_server/`: packaged as a Docker image, pushed to ECR, then deployed to ECS (behind ALB).
+- `services/dashboard/`: packaged as a Docker image, pushed to ECR, then deployed to ECS.
 - SDK code: synchronized to a public repository via CI (not a runtime service deployment).
 
 Environment and promotion model:
@@ -97,7 +97,7 @@ Config and secrets (conceptual):
 ## 7. Local Development (High Level)
 Typical developer workflow:
 - Install Python dependencies and SDK package in editable mode for SDK and backend Python components.
-- Install Node dependencies separately in `client_portal/` and `client_portal_server/`.
+- Install Node dependencies separately in `services/client_portal/` and `services/client_portal_server/`.
 - Run targeted local services:
   - SDK tests (`pytest`)
   - Client portal frontend (`npm run dev`)
@@ -131,4 +131,4 @@ Recommended documentation map:
 - Confirm the intended environment promotion strategy (single mainline deploy vs explicit dev/staging/prod progression).
 - Define final CI quality gates for Python SDK (PR workflow currently uses a lightweight placeholder stage).
 - Confirm official package release strategy (for example, package registry publishing) beyond public repository sync.
-- Confirm whether `sagemaker_endpoint/` is an active product path or a reference scaffold.
+- Confirm whether `services/sagemaker_endpoint/` is an active product path or a reference scaffold.

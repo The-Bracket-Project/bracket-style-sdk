@@ -4,10 +4,10 @@
 .codex/
 !.env.example
 !**/.env.example
-dashboard/client_aliases.json
+services/dashboard/client_aliases.json
 td.json
 td-register.json
-dashboard/__pycache__/
+services/dashboard/__pycache__/
 __pycache__/
 *.py[cod]
 *.pyo
