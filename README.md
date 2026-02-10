@@ -1,124 +1,134 @@
 # Bracket Style SDK
 
-Python SDK for Bracket Style APIs. Internal dashboard and demo API are for Bracket team use only.
+## 1. Overview
+This repository contains the Bracket Style Python SDK and the supporting systems used to operate and expose it. It combines product-facing components (SDK and client portal) with internal operational services (usage dashboard and demo API), plus infrastructure and deployment automation.
 
-## Repo layout
-- `src/` SDK
-- `dashboard/` internal dashboard (Internal Use)
-- `demo_api/` demo API (Internal Use)
-- `scripts/` smoke tests (Internal Use)
-- `client_portal/` vite front end for external users to track and access API keys
-- `client_portal_server/` express backend services to support functions for the client portal front end
+At a high level, the codebase is organized around:
+- A consumable Python SDK (`bracket-style-sdk`)
+- A client-facing portal for API key management
+- Backend services that power portal workflows
+- An internal dashboard for usage visibility
+- Infrastructure, CI/CD workflows, and operational scripts
 
-## SDK Quickstart
+## 2. What the SDK Does
+The SDK provides a consistent Python interface to Bracket Style APIs so application teams do not need to hand-roll HTTP transport, auth headers, retries, or error translation.
 
-Install (editable):
-```bash
-python -m pip install -e .
-```
+Primary abstractions:
+- `BracketClient`: main API client for request/response calls
+- `SDKConfig`: central configuration for API key, base URL, timeout, retries, and client metadata
+- Typed exceptions for common failure classes (`AuthenticationError`, `RateLimitError`, `NotFoundError`, `ApiError`, `NetworkError`)
 
-Usage:
+Public entrypoints are exported from `src/bracket_sdk/__init__.py`, with consumer-facing usage centered on `BracketClient`.
+
+Conceptual usage:
 ```python
 from bracket_sdk import BracketClient
 
-client = BracketClient(
-    api_key="YOUR_API_KEY",
-    client_id="acme-inc",
-)
-response = client.get("/v1/health")
-print(response)
+client = BracketClient(api_key="YOUR_API_KEY")
+health = client.health()
 ```
 
-`client_id` is optional and is sent as `x-client-id` to help with internal usage tracking.
-The SDK uses the default Bracket API base URL automatically.
+## 3. Repository Layout
+| Group | Directories | Purpose |
+|---|---|---|
+| SDK core | `src/`, `tests/` | Contains the Python package (`bracket_sdk`) and unit tests for core client behavior. This is the primary product artifact. |
+| Customer portal | `client_portal/`, `client_portal_server/` | React/Vite frontend plus Node/Express backend-for-frontend for API key management, auth integration, and portal APIs. |
+| Internal operations | `dashboard/`, `demo_api/` | FastAPI dashboard for usage monitoring and a demo API used for local/internal validation flows. |
+| Infrastructure and delivery | `infra/`, `.github/workflows/`, `scripts/` | Terraform for AWS infrastructure, GitHub Actions for CI/CD, and scripts for deployment and smoke checks. |
+| Documentation and distribution assets | `docs/`, `README.public.md` | Docs index and deployment documentation, plus public-facing README material used for SDK sync/public distribution. |
+| Integration scaffold | `sagemaker_endpoint/` | Minimal SageMaker inference scaffold for integration experimentation and reference. |
 
-Environment-based setup (optional):
-```bash
-export BRACKET_API_KEY="YOUR_API_KEY"
-```
-```python
-client = BracketClient()
-```
+Tooling snapshot:
+- Python SDK/tooling: Python 3.9+, `setuptools` packaging, `pytest` for SDK tests.
+- JavaScript/TypeScript apps: Node.js (Node 20 in CI), `npm` per app (`package-lock.json` in each portal project).
+- Frontend build system: React + TypeScript + Vite.
+- Backend service testing: Node built-in test runner (`node --test`) in `client_portal_server/`.
+- Infrastructure as code: Terraform (`infra/`, provider-managed AWS resources).
+- Containerization: Dockerfiles for portal API, frontend image packaging, and dashboard runtime.
+- Lint/format posture: no repository-wide lint/format standard is currently codified in central config files.
 
-You can also call `client.health()` as a convenience method (defaults to `/v1/health`).
+## 4. Components at a Glance
+| Component | Role | Runtime/Platform |
+|---|---|---|
+| Python SDK (`src/bracket_sdk`) | Consumer library for Bracket Style API access | Python package (setuptools, Python 3.9+) |
+| Client Portal (`client_portal`) | Customer UI for authentication and API key lifecycle management | React + TypeScript + Vite, deployed as static assets |
+| Client Portal API (`client_portal_server`) | Backend-for-frontend for key operations and auth-protected workflows | Node.js + Express, containerized and deployed to ECS |
+| Internal Dashboard (`dashboard`) | Internal usage and operational visibility | FastAPI, containerized and deployed to ECS |
+| Demo API (`demo_api`) | Local/internal API harness for smoke and usage flows | FastAPI service |
+| SDK Public Sync (`sdk-public-sync` workflow) | Mirrors selected SDK files to public repository | GitHub Actions source sync (non-runtime deploy) |
 
-## SDK Readiness Checklist (external use)
+## 5. CI/CD at a High Level
+This repository uses GitHub Actions workflows under `.github/workflows/`.
 
-Implemented in this repo:
-- [x] Packaging metadata in `pyproject.toml` with src layout and optional extras
-- [x] API key auth + optional `client_id` header injection
-- [x] Configurable base URL, timeout, retries, and user agent
-- [x] HTTP client with retry/backoff on network errors and 5xx responses
-- [x] Error mapping for auth, not found, rate limit, and generic API errors
-- [x] Convenience HTTP verbs, raw request access, and `health()` helper
-- [x] Context manager support and explicit `close()`
-- [x] Basic unit tests for auth headers and rate limit behavior
-- [x] Environment-based defaults for API key/base URL
-- [x] Smoke test scripts for health and generate endpoints
-- [x] README quickstart usage example
-- [ ] Typed request/response models (`src/bracket_sdk/models/` is empty)
-- [ ] API-specific methods beyond generic HTTP + `health()`
-- [ ] Async client variant
-- [ ] Pagination helpers/iterators
-- [ ] Retry handling for 429 with `Retry-After` and configurable backoff/jitter
-- [ ] Structured logging or debug hooks for requests/responses
-- [ ] Broader unit test coverage (retry paths, error payload parsing, timeouts)
-- [ ] CI running tests/linting (PR checks are placeholder)
-- [ ] Release/publish automation and changelog
+| Workflow | Trigger | High-level responsibility |
+|---|---|---|
+| `.github/workflows/python-pr-checks.yml` | Pull requests to `main` | Python package sanity check (currently lightweight placeholder stage). |
+| `.github/workflows/client-portal-detect-changes.yml` | Pull requests to `main` | Path-based checks: frontend build and backend tests only when relevant files change. |
+| `.github/workflows/client-portal-deploy.yml` | Push to `main`, manual dispatch | Deploys client portal surfaces: backend container to ECS and frontend static assets to S3/CloudFront. |
+| `.github/workflows/dashboard-deploy.yml` | Push to `main` (dashboard paths) | Builds/pushes dashboard container and updates ECS service. |
+| `.github/workflows/sdk-public-sync.yml` | Push to `main` (SDK paths), manual dispatch | Filters SDK-related files and syncs them to a separate public GitHub repository. |
 
-## SDK Roadmap
-- [ ] CI: run pytest (and add lint/type checks) in PR checks
-- [ ] SDK: add typed models + endpoint-specific methods
-- [ ] SDK: add async client + pagination helpers
-- [ ] Release: changelog + publish workflow
+Pipeline pattern:
+- Detect relevant path changes
+- Run targeted build/test checks
+- Build artifacts (container images or static assets)
+- Publish artifacts (ECR, S3, public repo)
+- Roll out runtime updates (ECS task/service update, CloudFront invalidation)
 
-## Dashboard (Internal Use)
+Current trigger model is branch-based (`main`/PR), with no tag- or release-driven deployment workflow committed.
 
-The internal usage dashboard and demo API are intended for monitoring SDK calls and client IDs.
-External users can ignore this section.
+## 6. Deployment and Environments
+Deployment is split by surface:
+- `client_portal/`: built as static assets and served via S3 + CloudFront.
+- `client_portal_server/`: packaged as a Docker image, pushed to ECR, then deployed to ECS (behind ALB).
+- `dashboard/`: packaged as a Docker image, pushed to ECR, then deployed to ECS.
+- SDK code: synchronized to a public repository via CI (not a runtime service deployment).
 
-### Hosting (dev)
-- Cloudflare: `thebracket.ai` zone, Zero Trust on `*.dev.thebracket.ai`
-- Dashboard: ECS Fargate (us-west-1) behind ALB
-- URL: `https://sdk-dashboard.dev.thebracket.ai`
-- Image: ECR `sdk-internal-dashboard` (us-west-1)
-- Data: CloudWatch Logs `/aws/apigateway/bracket-sdk-prod-access`
+Environment and promotion model:
+- Deployments are initiated from pushes to `main` (with path filters to avoid unnecessary rollouts).
+- Environment-specific behavior is driven by Terraform variables and workflow/runtime environment variables.
+- Configuration indicates stage-aware values (for example, API gateway stage variables), but CI currently reflects a direct `main` deployment flow rather than a codified multi-step promotion chain across dev/staging/prod.
 
-### Dashboard (local)
-```bash
-cp .env.example .env
-python -m pip install -e .[dashboard]
-uvicorn dashboard.app:app --reload --port 8001
-```
+Config and secrets (conceptual):
+- Local development uses `.env` patterns from `.env.example` files.
+- CI/CD uses GitHub Actions variables/secrets and AWS OIDC role assumption.
+- Runtime services receive configuration via environment variables (including ECS task definitions in Terraform-managed stack).
 
-Minimum env vars for CloudWatch data:
-- `DASHBOARD_DATA_SOURCE=cloudwatch`
-- `DASHBOARD_CLOUDWATCH_LOG_GROUP=/aws/apigateway/bracket-sdk-prod-access`
-- `AWS_REGION=us-west-1`
+## 7. Local Development (High Level)
+Typical developer workflow:
+- Install Python dependencies and SDK package in editable mode for SDK and backend Python components.
+- Install Node dependencies separately in `client_portal/` and `client_portal_server/`.
+- Run targeted local services:
+  - SDK tests (`pytest`)
+  - Client portal frontend (`npm run dev`)
+  - Client portal backend (`npm run dev`/`npm start`)
+  - Dashboard and demo API via `uvicorn`
+- Use the relevant `.env.example` file in each component as the source of required local configuration.
 
-If you do not have AWS creds, set `DASHBOARD_DATA_SOURCE=memory`.
+For exact commands and environment setup details, use component-level READMEs and `docs/`.
 
-### Demo API (local)
-```bash
-python -m pip install -e .[demo,dashboard]
-export BRACKET_API_KEY="dev-key"
-export DASHBOARD_URL="http://localhost:8001"
-uvicorn demo_api.app:app --reload --port 8000
-```
+## 8. Where to Put Deeper Docs (docs/)
+This README is intentionally high-level. Detailed operational and implementation docs should live under `docs/`.
 
-Then point the SDK at `http://localhost:8000` and call `/v1/health`.
+Recommended documentation map:
+- `docs/README.md`: docs index and navigation entrypoint
+- `docs/deployment/how-deployment-works.md`: deployment architecture, rollout sequence, rollback guidance
+- `docs/sdk/quickstart.md`: SDK consumer onboarding and common usage patterns
+- `docs/sdk/configuration.md`: SDK configuration matrix and environment conventions
+- `docs/portal/architecture.md`: client portal frontend/backend interaction model
+- `docs/dashboard/operations.md`: dashboard runtime, observability, and access control model
+- `docs/runbooks/`: operational runbooks (incident response, rollback, recovery)
 
-### Smoke Test Scripts
+## 9. Glossary (optional)
+- SDK: The Python client library used by integrators to call Bracket Style APIs.
+- Client Portal: Customer-facing web interface for API key lifecycle and usage access.
+- BFF (Backend-for-Frontend): Service layer that supports portal-specific API operations.
+- Dashboard: Internal operational UI for monitoring usage and API activity.
+- Public Sync: CI workflow that mirrors SDK files to a separate public repository.
 
-If your API Gateway requires a stage, pass `--stage` (or set `BRACKET_STAGE`).
-If your base URL already includes the stage, omit it.
-
-### Container (optional)
-```bash
-docker build -f Dockerfile.dashboard -t bracket-dashboard .
-docker run --env-file .env -p 8001:8001 bracket-dashboard
-```
-
-### Dashboard Roadmap
-- [ ] Automate Cloudflare IP allowlist on ALB SG/WAF
-- [ ] Add alerts for dashboard errors and empty CloudWatch reads
+## 10. Open Questions / Follow-ups (optional)
+- Confirm where dashboard infrastructure is defined long-term; current Terraform in `infra/` models the client portal stack, while dashboard runtime deployment is workflow-driven.
+- Confirm the intended environment promotion strategy (single mainline deploy vs explicit dev/staging/prod progression).
+- Define final CI quality gates for Python SDK (PR workflow currently uses a lightweight placeholder stage).
+- Confirm official package release strategy (for example, package registry publishing) beyond public repository sync.
+- Confirm whether `sagemaker_endpoint/` is an active product path or a reference scaffold.
