@@ -42,3 +42,6 @@ terraform.tfstate
 terraform.tfstate.*
 terraform.tfvars
 terraform.tfvars.json
+
+# Rafi specific local tests
+rafis-sdk-test.py

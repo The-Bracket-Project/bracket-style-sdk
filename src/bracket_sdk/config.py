@@ -3,7 +3,7 @@ from typing import Optional
 
 from bracket_sdk.version import __version__
 
-DEFAULT_BASE_URL = "https://api.bracketstyle.com"
+DEFAULT_BASE_URL = "https://api-sdk.demo.thebracket.ai"
 DEFAULT_TIMEOUT = 10.0
 DEFAULT_RETRIES = 3
 

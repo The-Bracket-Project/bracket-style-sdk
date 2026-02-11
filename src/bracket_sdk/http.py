@@ -80,10 +80,21 @@ class HttpClient:
     def _extract_error_message(self, response: httpx.Response) -> str:
         payload = self._payload(response)
         if isinstance(payload, dict):
-            for key in ("message", "error", "detail"):
+            for key in ("message", "error", "detail", "Message", "errorMessage", "__type"):
                 value = payload.get(key)
                 if isinstance(value, str) and value:
                     return value
+
+            # API Gateway AWS integrations may wrap downstream errors under Output.
+            nested = payload.get("Output")
+            if isinstance(nested, dict):
+                for key in ("message", "error", "detail", "Message", "errorMessage", "__type"):
+                    value = nested.get(key)
+                    if isinstance(value, str) and value:
+                        return value
+            if isinstance(nested, str) and nested:
+                return nested
+
         if isinstance(payload, str) and payload:
             return payload
         return f"HTTP {response.status_code}"

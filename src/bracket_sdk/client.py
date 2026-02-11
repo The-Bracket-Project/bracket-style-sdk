@@ -55,6 +55,53 @@ class BracketClient:
     def health(self) -> Any:
         return self.get("/v1/health")
 
+    def get_ocean(
+        self,
+        payload: Optional[Any] = None,
+        *,
+        text: Optional[str] = None,
+        explain: Optional[bool] = None,
+        user_id: Optional[str] = None,
+        lang: Optional[str] = None,
+        granularity: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Any:
+        body: Any
+
+        explicit_fields_provided = any(
+            value is not None for value in (text, explain, user_id, lang, granularity)
+        )
+        if payload is not None and explicit_fields_provided:
+            raise ValueError("Provide either payload or explicit fields, not both.")
+
+        if payload is None:
+            normalized_text = (text or "").strip()
+            if not normalized_text:
+                raise ValueError("text is required and must be a non-empty string.")
+            body = {"text": normalized_text}
+            if explain is not None:
+                body["explain"] = explain
+            if user_id is not None:
+                body["user_id"] = user_id
+            if lang is not None:
+                body["lang"] = lang
+            if granularity is not None:
+                body["granularity"] = granularity
+        else:
+            body = payload
+            if isinstance(body, dict):
+                # Backward-compatible alias for earlier examples.
+                if "text" not in body and "prompt" in body and isinstance(body["prompt"], str):
+                    body = {**body, "text": body["prompt"]}
+                    body.pop("prompt", None)
+
+                if "text" in body:
+                    value = body.get("text")
+                    if not isinstance(value, str) or not value.strip():
+                        raise ValueError("text is required and must be a non-empty string.")
+
+        return self.post("/v1/modules/text-to-ocean/inference", json=body, **kwargs)
+
     def _parse_response(self, response: httpx.Response) -> Any:
         content_type = response.headers.get("content-type", "")
         if "application/json" in content_type:
