@@ -1,1 +1,3 @@
-# Models will be added as API responses are defined.
+from bracket_sdk.models.ocean import OceanResult, OceanScores
+
+__all__ = ["OceanResult", "OceanScores"]

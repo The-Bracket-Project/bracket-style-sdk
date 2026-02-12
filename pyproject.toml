@@ -17,6 +17,7 @@ dependencies = [
 dev = [
   "pytest>=7.0.0",
   "pytest-cov>=4.0.0",
+  "pytest-asyncio>=0.23.0",
 ]
 demo = [
   "fastapi>=0.110.0",
@@ -36,3 +37,7 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
