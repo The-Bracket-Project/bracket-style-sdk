@@ -45,3 +45,7 @@ terraform.tfvars.json
 
 # Rafi specific local tests
 rafis-sdk-test.py
+
+# Keep dashboard frontend utility modules tracked.
+!services/dashboard/frontend/src/lib/
+!services/dashboard/frontend/src/lib/*.ts
