@@ -148,6 +148,39 @@ def test_api_error_surfaces_aws_message_variant() -> None:
         client.get_ocean({"prompt": "hello ocean"})
 
 
+def test_rewrite_text_uses_text_to_style_inference_path() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == "/v1/modules/text-to-style/inference"
+        assert json.loads(request.content.decode("utf-8")) == {"text": "hello style"}
+        return httpx.Response(200, json={"output_text": "styled"}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = BracketClient(api_key="test-key", transport=transport)
+
+    assert client.rewrite_text(text="hello style") == {"output_text": "styled"}
+
+
+def test_rewrite_text_maps_prompt_alias_to_text() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert json.loads(request.content.decode("utf-8")) == {"text": "hello style"}
+        return httpx.Response(200, json={"ok": True}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = BracketClient(api_key="test-key", transport=transport)
+
+    assert client.rewrite_text({"prompt": "hello style"}) == {"ok": True}
+
+
+def test_rewrite_text_requires_non_empty_text() -> None:
+    client = BracketClient(
+        api_key="test-key",
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, request=request)),
+    )
+    with pytest.raises(ValueError, match="text is required and must be a non-empty string"):
+        client.rewrite_text(text="   ")
+
+
 def test_custom_headers_persist_across_retries(monkeypatch: pytest.MonkeyPatch) -> None:
     attempts = 0
     custom_header_values = []

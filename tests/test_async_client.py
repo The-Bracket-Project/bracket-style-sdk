@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 
@@ -59,3 +61,31 @@ async def test_async_client_supports_async_context_manager() -> None:
     transport = httpx.MockTransport(handler)
     async with AsyncBracketClient(api_key="test-key", transport=transport) as client:
         assert await client.get("/ping") == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_async_client_rewrite_text_uses_text_to_style_path() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/modules/text-to-style/inference"
+        assert request.method == "POST"
+        assert json.loads(request.content.decode("utf-8")) == {"text": "hello style"}
+        return httpx.Response(200, json={"output_text": "styled"}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = AsyncBracketClient(api_key="test-key", transport=transport)
+
+    assert await client.rewrite_text(text="hello style") == {"output_text": "styled"}
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_async_client_rewrite_text_requires_non_empty_text() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"ok": True}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = AsyncBracketClient(api_key="test-key", transport=transport)
+
+    with pytest.raises(ValueError, match="text is required and must be a non-empty string"):
+        await client.rewrite_text(text="   ")
+    await client.close()

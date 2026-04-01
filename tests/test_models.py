@@ -1,4 +1,4 @@
-from bracket_sdk import OceanResult, OceanScores
+from bracket_sdk import OceanResult, OceanScores, RewriteResult
 
 
 def test_ocean_result_parses_nested_scores_payload() -> None:
@@ -45,3 +45,24 @@ def test_ocean_result_supports_top_level_scores_for_compatibility() -> None:
         "neuroticism": 0.75,
     }
     assert result.raw["note"] == "legacy shape"
+
+
+def test_rewrite_result_parses_output_and_meta() -> None:
+    payload = {
+        "output_text": "Styled output",
+        "meta": {
+            "request_id": "req-1",
+            "profile_source": "dynamodb",
+            "profile_version": "v7",
+            "model_version": "style-endpoint-v1",
+        },
+    }
+
+    result = RewriteResult.from_payload(payload)
+
+    assert result.output_text == "Styled output"
+    assert result.meta.request_id == "req-1"
+    assert result.meta.profile_source == "dynamodb"
+    assert result.meta.profile_version == "v7"
+    assert result.meta.model_version == "style-endpoint-v1"
+    assert result.as_dict() == payload

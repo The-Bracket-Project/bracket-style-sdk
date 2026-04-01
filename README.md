@@ -19,6 +19,9 @@ client = BracketClient(
 )
 response = client.get("/v1/health")
 print(response)
+
+styled = client.rewrite_text(text="can you help me draft a reply?")
+print(styled)
 ```
 
 `client_id` is optional and is sent as `x-client-id`. The SDK uses the default Bracket API base URL automatically.
