@@ -181,6 +181,70 @@ def test_rewrite_text_requires_non_empty_text() -> None:
         client.rewrite_text(text="   ")
 
 
+def test_personalized_rewrite_uses_personalized_rewrite_path() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == "/v1/modules/personalized-rewrite/inference"
+        assert json.loads(request.content.decode("utf-8")) == {
+            "user_id": "user-123",
+            "user_prompt": "how should I negotiate salary?",
+            "llm_output": "Here are generic salary negotiation tips.",
+            "context": {
+                "task_type": "support_reply",
+                "medium": "chat",
+                "stakes": "medium",
+                "language": "en",
+            },
+        }
+        return httpx.Response(200, json={"output_text": "personalized"}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = BracketClient(api_key="test-key", transport=transport)
+
+    assert (
+        client.personalized_rewrite(
+            user_id="user-123",
+            user_prompt="how should I negotiate salary?",
+            llm_output="Here are generic salary negotiation tips.",
+            context={
+                "task_type": "support_reply",
+                "medium": "chat",
+                "stakes": "medium",
+                "language": "en",
+            },
+        )
+        == {"output_text": "personalized"}
+    )
+
+
+def test_personalized_rewrite_requires_non_empty_required_fields() -> None:
+    client = BracketClient(
+        api_key="test-key",
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, request=request)),
+    )
+
+    with pytest.raises(ValueError, match="user_id is required and must be a non-empty string"):
+        client.personalized_rewrite(
+            user_id=" ",
+            user_prompt="prompt",
+            llm_output="llm output",
+        )
+
+    with pytest.raises(ValueError, match="user_prompt is required and must be a non-empty string"):
+        client.personalized_rewrite(
+            user_id="user-1",
+            user_prompt=" ",
+            llm_output="llm output",
+        )
+
+    with pytest.raises(ValueError, match="llm_output is required and must be a non-empty string"):
+        client.personalized_rewrite(
+            user_id="user-1",
+            user_prompt="prompt",
+            llm_output=" ",
+        )
+
+
 def test_custom_headers_persist_across_retries(monkeypatch: pytest.MonkeyPatch) -> None:
     attempts = 0
     custom_header_values = []

@@ -9,7 +9,14 @@ from bracket_sdk.errors import (
     NotFoundError,
     RateLimitError,
 )
-from bracket_sdk.models import OceanResult, OceanScores, RewriteMeta, RewriteResult
+from bracket_sdk.models import (
+    OceanResult,
+    OceanScores,
+    PersonalizedRewriteMeta,
+    PersonalizedRewriteResult,
+    RewriteMeta,
+    RewriteResult,
+)
 from bracket_sdk.version import __version__
 
 __all__ = [
@@ -22,6 +29,8 @@ __all__ = [
     "NotFoundError",
     "OceanResult",
     "OceanScores",
+    "PersonalizedRewriteMeta",
+    "PersonalizedRewriteResult",
     "RateLimitError",
     "RewriteMeta",
     "RewriteResult",

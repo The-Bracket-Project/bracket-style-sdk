@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 import httpx
 
@@ -84,6 +84,58 @@ class AsyncBracketClient:
                     raise ValueError("text is required and must be a non-empty string.")
 
         return await self.post("/v1/modules/text-to-style/inference", json=body, **kwargs)
+
+    async def personalized_rewrite(
+        self,
+        payload: Optional[Any] = None,
+        *,
+        user_id: Optional[str] = None,
+        user_prompt: Optional[str] = None,
+        llm_output: Optional[str] = None,
+        context: Optional[Mapping[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        body: Any
+        explicit_fields_provided = any(
+            value is not None for value in (user_id, user_prompt, llm_output, context)
+        )
+        if payload is not None and explicit_fields_provided:
+            raise ValueError("Provide either payload or explicit fields, not both.")
+
+        if payload is None:
+            normalized_user_id = (user_id or "").strip()
+            normalized_user_prompt = (user_prompt or "").strip()
+            normalized_llm_output = (llm_output or "").strip()
+
+            if not normalized_user_id:
+                raise ValueError("user_id is required and must be a non-empty string.")
+            if not normalized_user_prompt:
+                raise ValueError("user_prompt is required and must be a non-empty string.")
+            if not normalized_llm_output:
+                raise ValueError("llm_output is required and must be a non-empty string.")
+
+            body = {
+                "user_id": normalized_user_id,
+                "user_prompt": normalized_user_prompt,
+                "llm_output": normalized_llm_output,
+            }
+            if context is not None:
+                if not isinstance(context, Mapping):
+                    raise ValueError("context must be a mapping/object when provided.")
+                body["context"] = dict(context)
+        else:
+            body = payload
+            if isinstance(body, dict):
+                for key in ("user_id", "user_prompt", "llm_output"):
+                    value = body.get(key)
+                    if not isinstance(value, str) or not value.strip():
+                        raise ValueError(f"{key} is required and must be a non-empty string.")
+
+                context_payload = body.get("context")
+                if context_payload is not None and not isinstance(context_payload, Mapping):
+                    raise ValueError("context must be a mapping/object when provided.")
+
+        return await self.post("/v1/modules/personalized-rewrite/inference", json=body, **kwargs)
 
     def _parse_response(self, response: httpx.Response) -> Any:
         content_type = response.headers.get("content-type", "")

@@ -22,6 +22,13 @@ print(response)
 
 styled = client.rewrite_text(text="can you help me draft a reply?")
 print(styled)
+
+personalized = client.personalized_rewrite(
+    user_id="user-123",
+    user_prompt="How should I answer this customer?",
+    llm_output="Thanks for contacting support. Here's what we can do next.",
+)
+print(personalized)
 ```
 
 `client_id` is optional and is sent as `x-client-id`. The SDK uses the default Bracket API base URL automatically.

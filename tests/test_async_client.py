@@ -89,3 +89,46 @@ async def test_async_client_rewrite_text_requires_non_empty_text() -> None:
     with pytest.raises(ValueError, match="text is required and must be a non-empty string"):
         await client.rewrite_text(text="   ")
     await client.close()
+
+
+@pytest.mark.asyncio
+async def test_async_client_personalized_rewrite_uses_personalized_rewrite_path() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/modules/personalized-rewrite/inference"
+        assert request.method == "POST"
+        assert json.loads(request.content.decode("utf-8")) == {
+            "user_id": "user-123",
+            "user_prompt": "can you help me prioritize this project?",
+            "llm_output": "Here is a broad framework for prioritization.",
+        }
+        return httpx.Response(200, json={"output_text": "personalized"}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = AsyncBracketClient(api_key="test-key", transport=transport)
+
+    assert (
+        await client.personalized_rewrite(
+            user_id="user-123",
+            user_prompt="can you help me prioritize this project?",
+            llm_output="Here is a broad framework for prioritization.",
+        )
+        == {"output_text": "personalized"}
+    )
+    await client.close()
+
+
+@pytest.mark.asyncio
+async def test_async_client_personalized_rewrite_requires_non_empty_fields() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"ok": True}, request=request)
+
+    transport = httpx.MockTransport(handler)
+    client = AsyncBracketClient(api_key="test-key", transport=transport)
+
+    with pytest.raises(ValueError, match="user_id is required and must be a non-empty string"):
+        await client.personalized_rewrite(
+            user_id=" ",
+            user_prompt="prompt",
+            llm_output="llm output",
+        )
+    await client.close()
